@@ -104,3 +104,17 @@ function(findGLM target)
     
 endfunction(findGLM)
 
+# Find assimp
+function(findAssimp target)
+
+    find_package(assimp CONFIG REQUIRED)
+
+    if (assimp_FOUND)
+        target_link_libraries(${target} assimp::assimp)
+    else()
+        message(FATAL_ERROR "assimp could not be found")
+    endif()
+
+endfunction(findAssimp)
+       
+
