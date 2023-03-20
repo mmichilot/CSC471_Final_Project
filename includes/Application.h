@@ -13,6 +13,8 @@ using namespace std;
 
 #define WIDTH  1280
 #define HEIGHT 720
+#define SHADOW_WIDTH  2048
+#define SHADOW_HEIGHT 2048
 
 class Application : public EventCallbacks
 {
@@ -37,15 +39,11 @@ public:
 
 	// Lights
 	LightingSystem lightingSystem;
-	struct {
-		unsigned int id;
-		glm::vec3 position;
-	} stage_lights[10];
+	vector<unsigned int> stageLights;
 
 	// Shadow mapping
-	unsigned int depthMapFBO;
-	unsigned int depthMap;
-	const unsigned int SHADOW_WIDTH = 8192, SHADOW_HEIGHT = 8192;
+	unsigned int shadowFBO[10];
+	unsigned int shadowMaps;
 
 	// Camera
 	Camera camera;
@@ -73,7 +71,7 @@ public:
     void initGeometry(const string objectDirectory);
     void initTextures(const string textureDirectory);
     void initLights();
-    void initShadowMap();
+	void initShadows();
 
 	void render();
 

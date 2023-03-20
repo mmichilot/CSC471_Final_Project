@@ -6,6 +6,6 @@
 using namespace std;
 
 unsigned int TextureFromFile(const char *path, const string &directory);
-void saveImage(const char *path, int width, int height, unsigned int FBO);
+void saveImage(const char *path, int width, int height, unsigned int shadowMaps);
 
 #endif

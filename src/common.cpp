@@ -54,12 +54,9 @@ unsigned int TextureFromFile(const char *path, const string &directory)
     return textureID;
 }
 
-void saveImage(const char *path, int width, int height, unsigned int FBO)
+void saveImage(const char *path, int width, int height, unsigned int shadowMaps)
 {
-    std::vector<float> buffer(width*height);
-    glBindFramebuffer(GL_FRAMEBUFFER, FBO);
-        glReadPixels(0, 0, width, height, GL_DEPTH_COMPONENT, GL_FLOAT, buffer.data());
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
-
-    stbi_write_png(path, width, height, 1, buffer.data(), width);
+    std::vector<float> buffer(width*height*10);
+    glGetTexImage(GL_TEXTURE_2D_ARRAY, 0, GL_DEPTH_COMPONENT, GL_FLOAT, (void*) buffer.data());
+    stbi_write_png(path, width, height, 2, buffer.data(), 10*width*sizeof(float));
 }

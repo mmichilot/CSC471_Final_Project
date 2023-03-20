@@ -37,18 +37,18 @@ struct Light {
 in vec3 v_fragPos;
 in vec3 v_fragNor;
 in vec2 texCoords;
-in vec4 fragPosLightSpace;
+in vec4 fragPosLightSpace[MAX_LIGHTS];
 
 out vec4 color;
 
 uniform Material material;
 uniform Light light[MAX_LIGHTS];
-uniform sampler2D shadowMap;
+uniform sampler2DArrayShadow shadowMaps;
 
 void computeLight(Light light, out vec3 ambient, out vec3 diffuse, out vec3 specular);
 void computeAttenuation(Light light, inout vec3 ambient, inout vec3 diffuse, inout vec3 specular);
 void computeIntensity(Light light, inout vec3 diffuse, inout vec3 specular);
-float shadowCalculation(Light light, vec4 ls_fragPos);
+float shadowCalculation(vec4 ls_fragPos, int shadowMap);
 
 void main()
 {
@@ -69,7 +69,8 @@ void main()
 				computeIntensity(light[i], diffuse, specular);
 			
 			// Compute shadows from light source
-			float shadow = shadowCalculation(light[i], fragPosLightSpace);
+			float shadow = shadowCalculation(fragPosLightSpace[i], i);
+
 			result += (ambient + (1.0 - shadow) * (diffuse + specular));
 		}
 	}
@@ -126,29 +127,24 @@ void computeIntensity(Light light, inout vec3 diffuse, inout vec3 specular)
 	specular *= intensity;
 }
 
-float shadowCalculation(Light light, vec4 ls_fragPos)
-{
-	vec3 normal     = normalize(v_fragNor);
-	vec3 lightDir   = normalize(light.position - v_fragPos);
+float shadowCalculation(vec4 ls_fragPos, int shadowMap)
+{	
+	float bias = 0.000005;
+	vec2 texelSize = 1 / textureSize(shadowMaps, 0).xy;
 	
 	vec3 projCoords = ls_fragPos.xyz / ls_fragPos.w;
 	projCoords = projCoords * 0.5 + 0.5;
-
 	float currentDepth = projCoords.z;
-
-	float bias = max(0.0005 * (1.0 - dot(normal, lightDir)), 0.00005);
+	
 	
 	float shadow = 0.0;
-	vec2 texelSize = 0.9 / textureSize(shadowMap, 0);
 	for (int x = -2; x <= 2; ++x)
 	{
 		for (int y = -2; y <= 2; ++y)
-		{
-			float pcfDepth = texture(shadowMap, projCoords.xy + vec2(x, y) * texelSize).r;
-			shadow += (currentDepth - bias) > pcfDepth ? 1.0 : 0.0;
-		}
+			shadow += texture(shadowMaps, vec4(projCoords.xy + vec2(x,y) * texelSize, shadowMap, currentDepth - bias));
 	}
 	
 	shadow /= 25.0;
+	
 	return shadow;
 }

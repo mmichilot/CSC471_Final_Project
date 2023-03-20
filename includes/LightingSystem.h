@@ -12,7 +12,6 @@ using namespace std;
 
 struct LightSource {
     unsigned int id;
-    LightType type;
     bool enabled;
     shared_ptr<Light> light;
 };
@@ -38,12 +37,15 @@ class LightingSystem
         void renderLights(shared_ptr<Program> prog, glm::mat4 view) const;
         
         void setPosition(unsigned int id, glm::vec3 position);
-        glm::vec3 getPosition(unsigned int id);
         void setDirection(unsigned int id, glm::vec3 direction);
+        void setColor(unsigned int id, glm::vec3 color);
+    
+        glm::vec3 getPosition(unsigned int id);
         glm::vec3 getDirection(unsigned int id);
+        glm::mat4 getSpaceMatrix(unsigned int id, float aspect);
         
     private:
-        LightSource* search(unsigned int id);
+        shared_ptr<Light> search(unsigned int id);
 };
 
 #endif

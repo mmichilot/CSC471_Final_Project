@@ -1,4 +1,7 @@
 #version  330 core
+
+#define MAX_LIGHTS 10
+
 layout(location = 0) in vec3 vertPos;
 layout(location = 1) in vec3 vertNor;
 layout(location = 2) in vec2 vertTex;
@@ -7,12 +10,12 @@ layout(location = 2) in vec2 vertTex;
 out vec3 v_fragPos;
 out vec3 v_fragNor;
 out vec2 texCoords;
-out vec4 fragPosLightSpace;
+out vec4 fragPosLightSpace[MAX_LIGHTS];
 
 uniform mat4 P;
 uniform mat4 V;
 uniform mat4 M;
-uniform mat4 lightSpaceMatrix;
+uniform mat4 lightSpaceMatrix[MAX_LIGHTS];
 
 void main()
 {	
@@ -26,7 +29,9 @@ void main()
 
 	texCoords = vertTex;
 
-	fragPosLightSpace = lightSpaceMatrix * vec4(m_fragPos, 1.0);
+	// Compute Fragment position in all light spaces
+	for (int i = 0; i < MAX_LIGHTS; i++)
+		fragPosLightSpace[i] = lightSpaceMatrix[i] * vec4(m_fragPos, 1.0);
 	
 	gl_Position = P * V * M * vec4(vertPos, 1.0);
 }

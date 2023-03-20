@@ -35,7 +35,7 @@ int main(int argc, char *argv[])
 	application->initGeometry(objectDir);
 	application->initTextures(textureDir);
 	application->initLights();
-	application->initShadowMap();
+	application->initShadows();
 
 	// Loop until the user closes the window.
 	while (!glfwWindowShouldClose(windowManager->getHandle()))

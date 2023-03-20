@@ -140,27 +140,35 @@ void Application::render()
     glfwGetFramebufferSize(windowManager->getHandle(), &width, &height);
     float aspect = width/(float)height;
 
-    /*
-     * Render depth map
-     */
-    glm::mat4 lightProjection = glm::perspective(40.0f, aspect, 0.01f, 100.0f);
-    glm::vec3 lightPosition  = lightingSystem.getPosition(stage_lights[0].id);
-    glm::vec3 lightFront = glm::normalize(lightingSystem.getDirection(stage_lights[0].id));
-    glm::vec3 lightRight = glm::normalize(glm::cross(lightFront, glm::vec3(0.0f, 1.0f, 0.0f)));
-    glm::vec3 lightUp    = glm::normalize(glm::cross(lightRight, lightFront));
-    glm::mat4 lightView  = glm::lookAt(lightPosition, lightPosition + lightFront, lightUp);
-    glm::mat4 lightSpaceMatrix = lightProjection * lightView;
 
+    /*
+     * Render depth map for each light
+     */
+    
     shadowProg->bind();
-        glUniformMatrix4fv(shadowProg->getUniform("lightSpaceMatrix"), 1, GL_FALSE, value_ptr(lightSpaceMatrix));
-        glViewport(0, 0, SHADOW_WIDTH, SHADOW_HEIGHT);
-        glBindFramebuffer(GL_FRAMEBUFFER, depthMapFBO);
-            glClear(GL_DEPTH_BUFFER_BIT);
-            glCullFace(GL_FRONT);
-            renderScene(shadowProg, false);
-            glCullFace(GL_BACK);
-        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    glViewport(0, 0, SHADOW_WIDTH, SHADOW_HEIGHT);
+    
+    for (unsigned int i = 0; i < stageLights.size(); i++)
+    { 
+        glBindFramebuffer(GL_FRAMEBUFFER, shadowFBO[i]);
+        glDrawBuffer(GL_NONE);
+        glReadBuffer(GL_NONE);
+        
+        // Get ligt space matrix for a given light
+        glm::mat4 LightSpace = lightingSystem.getSpaceMatrix(stageLights[i], aspect);
+        glUniformMatrix4fv(shadowProg->getUniform("lightSpaceMatrix"), 1, GL_FALSE, value_ptr(LightSpace));
+
+        // Setup shadow map
+        glClear(GL_DEPTH_BUFFER_BIT);
+       
+        glCullFace(GL_FRONT);
+        renderScene(shadowProg, false);
+        glCullFace(GL_BACK);
+    }
+
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
     shadowProg->unbind();
+
 
     /*
      * Render scene normally (skysphere, lighting, shadow mapping)
@@ -184,16 +192,25 @@ void Application::render()
     prog->bind();
         glUniformMatrix4fv(prog->getUniform("P"), 1, GL_FALSE, value_ptr(Projection));
         glUniformMatrix4fv(prog->getUniform("V"), 1, GL_FALSE, value_ptr(View));
-        glUniformMatrix4fv(prog->getUniform("lightSpaceMatrix"), 1, GL_FALSE, value_ptr(lightSpaceMatrix));
+        
+        for (unsigned int i = 0; i < stageLights.size(); i++) {
+            string index = "[" + to_string(i) + "]";
+            glUniformMatrix4fv(prog->getUniform("lightSpaceMatrix"+index), 1, GL_FALSE, 
+                value_ptr(lightingSystem.getSpaceMatrix(stageLights[i], aspect)));
+        }
         
 
-        lightingSystem.setPosition(stage_lights[0].id, glm::vec3(2*glm::cos(glfwGetTime()), 5.0f, -6.0f));
+        // lightingSystem.setPosition(stageLights[2], glm::vec3(3*glm::cos(glfwGetTime()), 0.0f, -6.0f));
+        // lightingSystem.setPosition(stageLights[1], glm::vec3(2*glm::cos(glfwGetTime()), 0.0f, -6.0f));
+        // lightingSystem.setColor(stageLights[1], glm::vec3(0.5*glm::cos(glfwGetTime())+0.5));
+        // lightingSystem.setDirection(stageLights[3], glm::vec3(glm::cos(glfwGetTime()), -1.0f, 1.0f));
+
         lightingSystem.renderLights(prog, View);
         
-        // Bind shadow map texture
+        // Bind shadow maps
         glActiveTexture(GL_TEXTURE0 + 100);
-        glUniform1i(prog->getUniform("shadowMap"), 100);
-        glBindTexture(GL_TEXTURE_2D, depthMap);
+        glUniform1i(prog->getUniform("shadowMaps"), 100);
+        glBindTexture(GL_TEXTURE_2D_ARRAY, shadowMaps);
         
         renderScene(prog);
     prog->unbind();

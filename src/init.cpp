@@ -1,3 +1,5 @@
+#include <iostream>
+
 #include "Application.h"
 #include "GLSL.h"
 #include "common.h"
@@ -31,23 +33,24 @@ void Application::initShaders(const string shaderDirectory)
     prog->addUniform("P");
     prog->addUniform("V");
     prog->addUniform("M");
-    prog->addUniform("lightSpaceMatrix");
-    prog->addUniform("shadowMap");
+    prog->addUniform("shadowMaps");
+
     
     for (unsigned int i = 0; i < 10; i++) {
-        string light = ("light[" + to_string(i) + "]");
-        prog->addUniform(light + ".valid");
-        prog->addUniform(light + ".type");
-        prog->addUniform(light + ".position");
-        prog->addUniform(light + ".direction");
-        prog->addUniform(light + ".inner_cutoff");
-        prog->addUniform(light + ".outer_cutoff");
-        prog->addUniform(light + ".ambient");
-        prog->addUniform(light + ".diffuse");
-        prog->addUniform(light + ".specular");
-        prog->addUniform(light + ".constant");
-        prog->addUniform(light + ".linear");
-        prog->addUniform(light + ".quadratic");
+        string index = ("[" + to_string(i) + "]");
+        prog->addUniform("light" + index + ".valid");
+        prog->addUniform("light" + index + ".type");
+        prog->addUniform("light" + index + ".position");
+        prog->addUniform("light" + index + ".direction");
+        prog->addUniform("light" + index + ".inner_cutoff");
+        prog->addUniform("light" + index + ".outer_cutoff");
+        prog->addUniform("light" + index + ".ambient");
+        prog->addUniform("light" + index + ".diffuse");
+        prog->addUniform("light" + index + ".specular");
+        prog->addUniform("light" + index + ".constant");
+        prog->addUniform("light" + index + ".linear");
+        prog->addUniform("light" + index + ".quadratic");
+        prog->addUniform("lightSpaceMatrix" + index);
     }
 
     prog->addUniform("material.diffuse");
@@ -77,8 +80,8 @@ void Application::initShaders(const string shaderDirectory)
     shadowProg->setVerbose(true);
     shadowProg->setShaderNames(shaderDirectory + "/shadow_vert.glsl", shaderDirectory + "/shadow_frag.glsl");
     shadowProg->init();
-    shadowProg->addUniform("lightSpaceMatrix");
     shadowProg->addUniform("M");
+    shadowProg->addUniform("lightSpaceMatrix");
     shadowProg->addAttribute("vertPos");
 }
 
@@ -120,9 +123,9 @@ void initPlane(unsigned int *VAO, unsigned int *VBO)
     float vertices[] = {
         // positions         	      // normals       	 // texture coords
         -groundX, 0.0f, -groundZ,  0.0f, 1.0f,  0.0f,       0.0f,  groundTex,
-            groundX, 0.0f, -groundZ,  0.0f, 1.0f,  0.0f,  groundTex,  groundTex,
-            groundX, 0.0f,  groundZ,  0.0f, 1.0f,  0.0f,  groundTex,       0.0f,
-            groundX, 0.0f,  groundZ,  0.0f, 1.0f,  0.0f,  groundTex,       0.0f,
+         groundX, 0.0f, -groundZ,  0.0f, 1.0f,  0.0f,  groundTex,  groundTex,
+         groundX, 0.0f,  groundZ,  0.0f, 1.0f,  0.0f,  groundTex,       0.0f,
+         groundX, 0.0f,  groundZ,  0.0f, 1.0f,  0.0f,  groundTex,       0.0f,
         -groundX, 0.0f,  groundZ,  0.0f, 1.0f,  0.0f,       0.0f,       0.0f,
         -groundX, 0.0f, -groundZ,  0.0f, 1.0f,  0.0f,       0.0f,  groundTex,
     };
@@ -148,35 +151,43 @@ void initPlane(unsigned int *VAO, unsigned int *VBO)
 void Application::initLights()
 {
     // Setup lights
-    stage_lights[0].position = glm::vec3(0.0f, 5.0f, -6.0f);
-    stage_lights[0].id = lightingSystem.spawnSpotLight(glm::vec3(1.0f), 20, 25, 
-        stage_lights[0].position, glm::vec3(0.0f, -0.7f, 1.0f));
-    // stage_lights[1] = lightingSystem.spawnSpotLight(glm::vec3(0.0f, 1.0f, 0.0f), 
-    // 	20, 25, glm::vec3( 1.0f, 5.0f, -1.0f));
-    // stage_lights[2] = lightingSystem.spawnSpotLight(glm::vec3(0.0f, 0.0f, 1.0f), 
-    // 	20, 25, glm::vec3( 0.0f, 5.0f,  1.0f));
-    // stage_lights[3] = lightingSystem.spawnPointLight(glm::vec3(1.0f), 
-    // 	glm::vec3( 1.0f, 2.0f,  -1.0f));
+    unsigned int light0 = lightingSystem.spawnSpotLight(glm::vec3(1.0f, 0.0f, 0.0f), 20, 25, 
+        glm::vec3(-4.0f, 0.0f, -6.0f), glm::vec3(0.7f, 0.0f, 1.0f));
+    stageLights.push_back(light0);
 
+    unsigned int light1 = lightingSystem.spawnSpotLight(glm::vec3(0.0f, 1.0f, 0.0f), 20, 25, 
+        glm::vec3(4.0f, 0.0f, -6.0f), glm::vec3(-0.7f, 0.0f, 1.0f));
+    stageLights.push_back(light1);
+
+    unsigned int light2 = lightingSystem.spawnSpotLight(glm::vec3(0.0f, 0.0f, 1.0f), 20, 25, 
+        glm::vec3(0.0f, 0.0f, -6.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+    stageLights.push_back(light2);
+
+    // unsigned int light3 = lightingSystem.spawnSpotLight(glm::vec3(1.0f), 20, 25, 
+    //     glm::vec3(0.0f, 5.0f, -6.0f), glm::vec3(0.0f, -1.0f, 1.0f));
+    // stageLights.push_back(light3);
 }
 
-void Application::initShadowMap()
+void Application::initShadows()
 {
-    // Setup shadow map texture
-    glGenTextures(1, &depthMap);
-    glBindTexture(GL_TEXTURE_2D, depthMap);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT,
-        SHADOW_WIDTH, SHADOW_HEIGHT, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    // Setup an array of shadow maps
+    glGenTextures(1, &shadowMaps);
+    glBindTexture(GL_TEXTURE_2D_ARRAY, shadowMaps);
+    glTexImage3D(GL_TEXTURE_2D_ARRAY, 0, GL_DEPTH_COMPONENT,
+        SHADOW_WIDTH, SHADOW_HEIGHT, 10, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
+    glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_COMPARE_MODE, GL_COMPARE_REF_TO_TEXTURE);
+    glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_COMPARE_FUNC, GL_GEQUAL);
 
-    // Setup shadow map FBO
-    glGenFramebuffers(1, &depthMapFBO);
-    glBindFramebuffer(GL_FRAMEBUFFER, depthMapFBO);
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, depthMap, 0);
-    glDrawBuffer(GL_NONE);
-    glReadBuffer(GL_NONE);
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    glGenFramebuffers(10, &shadowFBO[0]);
+
+    // Attach each shadow map layer to an FBO
+    for (unsigned int i = 0; i < 10; i++) {
+        glBindFramebuffer(GL_FRAMEBUFFER, shadowFBO[i]);
+        glFramebufferTextureLayer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, shadowMaps, 0, i);
+    }
+
 }

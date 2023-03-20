@@ -10,15 +10,14 @@ using namespace std;
 /*
  * Helper Functions
  */
-LightSource* LightingSystem::search(unsigned int id)
+shared_ptr<Light> LightingSystem::search(unsigned int id)
 {
-    for (unsigned int i = 0; i < lights.size(); i++)
-    {
-        if (lights[i].id == id)
-            return &lights[i];
+    for (auto light : lights) {
+        if (light.id == id)
+            return light.light;
     }
 
-    cerr << "[LightingSystem] ID " << id << " not found!" <<endl;
+    cerr << "[LightingSystem] ID " << id << " not found!" << endl;
     return NULL;
 }
 
@@ -30,7 +29,6 @@ unsigned int LightingSystem::spawnDirectLight(glm::vec3 color, glm::vec3 directi
     LightSource light;
     
     light.id = lights.size();
-    light.type = DIRECT_LIGHT;
     light.enabled = true;
     light.light = make_shared<DirectLight>(color, direction);
 
@@ -43,7 +41,6 @@ unsigned int LightingSystem::spawnPointLight(glm::vec3 color, glm::vec3 position
     LightSource light;
     
     light.id = lights.size();
-    light.type = POINT_LIGHT;
     light.enabled = true;
     light.light = make_shared<PointLight>(color, position);
 
@@ -57,7 +54,6 @@ unsigned int LightingSystem::spawnSpotLight(glm::vec3 color, float inner_cutoff,
     LightSource light;
     
     light.id = lights.size();
-    light.type = SPOT_LIGHT;
     light.enabled = true;
     light.light = make_shared<SpotLight>(color, position, direction, 
         inner_cutoff, outer_cutoff);
@@ -71,33 +67,35 @@ unsigned int LightingSystem::spawnSpotLight(glm::vec3 color, float inner_cutoff,
  */
 void LightingSystem::setPosition(unsigned int id, glm::vec3 position)
 {
+    auto light = search(id);
     
-    LightSource *l = search(id);
-    
-    if (l == NULL)
-        return;
+    if (light == NULL) return;
 
-    if (l->type == DIRECT_LIGHT) {
-        cerr << "Directional light doesn't have a position!" << endl;
-        return;
-    }
-
-    dynamic_pointer_cast<PointLight>(l->light)->setPosition(position);
+    if (auto pointLight = dynamic_pointer_cast<PointLight>(light))
+        pointLight->setPosition(position);
+    if (auto spotLight = dynamic_pointer_cast<SpotLight>(light))
+        spotLight->setPosition(position);
 }
 
 void LightingSystem::setDirection(unsigned int id, glm::vec3 direction)
 {
-    LightSource *l = search(id);
+    auto light = search(id);
 
-    if (l == NULL)
-        return;
+    if (light == NULL) return;
 
-    if (l->type == POINT_LIGHT) {
-        cerr << "Point light doesn't have a direction!" << endl;
-        return;
-    }
+    if (auto directLight = dynamic_pointer_cast<DirectLight>(light))
+        directLight->setDirection(direction);
+    if (auto spotLight = dynamic_pointer_cast<SpotLight>(light))
+        spotLight->setDirection(direction);
+}
 
-    dynamic_pointer_cast<DirectLight>(l->light)->setDirection(direction);
+void LightingSystem::setColor(unsigned int id, glm::vec3 color)
+{
+    auto light = search(id);
+
+    if (light == NULL) return;
+
+    light->setColor(color);
 }
 
 /* 
@@ -105,32 +103,42 @@ void LightingSystem::setDirection(unsigned int id, glm::vec3 direction)
  */
 glm::vec3 LightingSystem::getPosition(unsigned int id)
 {
-    LightSource *l = search(id);
+    auto light = search(id);
 
-    if (l == NULL)
-        return glm::vec3(0.0f);
+    if (light == NULL) return glm::vec3(0.0f);
     
-    if (l->type == DIRECT_LIGHT) {
-        cerr << "Directional light doesn't have a position!" << endl;
-        return glm::vec3(0.0f);
-    }
-
-    return dynamic_pointer_cast<PointLight>(l->light)->position;
+    if (auto pointLight = dynamic_pointer_cast<PointLight>(light))
+        return pointLight->getPosition();
+    if (auto spotLight = dynamic_pointer_cast<SpotLight>(light))
+        return spotLight->getPosition();
+    
+    return glm::vec3(0.0f);
 }
 
 glm::vec3 LightingSystem::getDirection(unsigned int id)
 {
-    LightSource *l = search(id);
+    auto light = search(id);
 
-    if (l == NULL)
-        return glm::vec3(0.0f);
+    if (light == NULL) return glm::vec3(0.0f);
     
-    if (l->type == POINT_LIGHT) {
-        cerr << "Point light doesn't have a direction!" << endl;
-        return glm::vec3(0.0f);
-    }
+    if (auto directLight = dynamic_pointer_cast<DirectLight>(light))
+        return directLight->getDirection();
+    if (auto spotLight = dynamic_pointer_cast<SpotLight>(light))
+        return spotLight->getDirection();
 
-    return dynamic_pointer_cast<DirectLight>(l->light)->direction;
+    return glm::vec3(0.0f);
+}
+
+glm::mat4 LightingSystem::getSpaceMatrix(unsigned int id, float aspect)
+{
+    auto light = search(id);
+
+    if (light == NULL) return glm::mat4(0.0f);
+
+    if (auto spotLight = dynamic_pointer_cast<SpotLight>(light))
+        return spotLight->getProjectionMatrix(aspect) * spotLight->getViewMatrix();
+
+    return glm::mat4(0.0f);
 }
 
 /*
@@ -145,22 +153,25 @@ void LightingSystem::renderLights(shared_ptr<Program> prog, glm::mat4 view) cons
 
 
         if (lights[i].enabled) {
-
-            // Set light source type
             glUniform1i(prog->getUniform(light + ".valid"), GL_TRUE);
-            glUniform1i(prog->getUniform(light + ".type"), lights[i].type);
-            
+
             // Render light color
             lights[i].light->activate(i, prog);
 
-            // Renderlight specific properties
-            if (lights[i].type == DIRECT_LIGHT)
-                dynamic_pointer_cast<DirectLight>(lights[i].light)->activate(i, prog, view);
-            else if (lights[i].type == POINT_LIGHT)
-                dynamic_pointer_cast<PointLight>(lights[i].light)->activate(i, prog, view);
-            else if (lights[i].type == SPOT_LIGHT)
-                dynamic_pointer_cast<SpotLight>(lights[i].light)->activate(i, prog, view);
+            if (auto directLight = dynamic_pointer_cast<DirectLight>(lights[i].light)) {
+                glUniform1i(prog->getUniform(light + ".type"), 0);
+                directLight->activate(i, prog, view);
+            }
 
+            if (auto pointLight = dynamic_pointer_cast<PointLight>(lights[i].light)) {
+                glUniform1i(prog->getUniform(light + ".type"), 1);
+                pointLight->activate(i, prog, view);
+            }
+
+            if (auto spotLight = dynamic_pointer_cast<SpotLight>(lights[i].light)) {
+                glUniform1i(prog->getUniform(light + ".type"), 2);
+                spotLight->activate(i, prog, view);
+            }
         }
     }
 }
