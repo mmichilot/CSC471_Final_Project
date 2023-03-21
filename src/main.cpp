@@ -14,6 +14,7 @@ int main(int argc, char *argv[])
 	string shaderDir   = resourceDir + "/shaders";
 	string textureDir  = resourceDir + "/textures";
 	string objectDir   = resourceDir + "/objects";
+	string audioDir    = resourceDir + "/audio";
 
 
 	if (argc >= 2)
@@ -21,34 +22,36 @@ int main(int argc, char *argv[])
 		resourceDir = argv[1];
 	}
 
-	Application *application = new Application();
+	Application application = Application();
 
 	// Setup window and callbacks
-	WindowManager *windowManager = new WindowManager();
-	windowManager->init(WIDTH, HEIGHT);
-	windowManager->setEventCallbacks(application);
-	application->windowManager = windowManager;
+	WindowManager windowManager = WindowManager();
+	windowManager.init(WIDTH, HEIGHT);
+	windowManager.setEventCallbacks(&application);
+	application.windowManager = &windowManager;
 
 	// Initilize application
-	application->init();
-	application->initShaders(shaderDir);
-	application->initGeometry(objectDir);
-	application->initTextures(textureDir);
-	application->initLights();
-	application->initShadows();
+	application.init();
+	application.initShaders(shaderDir);
+	application.initGeometry(objectDir);
+	application.initTextures(textureDir);
+	application.initAudio(audioDir);
+	application.initLights();
+	application.initShadows();
+	application.initCameras();
 
 	// Loop until the user closes the window.
-	while (!glfwWindowShouldClose(windowManager->getHandle()))
+	while (!glfwWindowShouldClose(windowManager.getHandle()))
 	{
-		application->render();
+		application.render();
 
 		// Swap front and back buffers.
-		glfwSwapBuffers(windowManager->getHandle());
+		glfwSwapBuffers(windowManager.getHandle());
 		// Poll for and process events.
 		glfwPollEvents();
 	}
 
 	// Quit program.
-	windowManager->shutdown();
+	windowManager.shutdown();
 	return 0;
 }

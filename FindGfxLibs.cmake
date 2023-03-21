@@ -107,7 +107,7 @@ endfunction(findGLM)
 # Find assimp
 function(findAssimp target)
 
-    find_package(assimp CONFIG REQUIRED)
+    find_package(assimp)
 
     if (assimp_FOUND)
         target_link_libraries(${target} assimp::assimp)

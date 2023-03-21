@@ -96,7 +96,7 @@ Mesh Model::processMesh(aiMesh *mesh, const aiScene *scene)
 
     if (mesh->mMaterialIndex >= 0)
     {
-        cout << "Loading Materials..." << endl; 
+        cout << "\nLoading Materials..." << endl; 
         aiMaterial *material = scene->mMaterials[mesh->mMaterialIndex];
         
         // Load diffuse texture map, if available
@@ -203,4 +203,23 @@ void Model::normalize()
     glm::mat4 S_o = glm::scale(glm::mat4(1.0f), glm::vec3(2/max3(extents)));
 
     M_o = S_o * T_o;
+
+    // Update the bounding box
+    bb.min = glm::vec3(M_o * glm::vec4(bb.min, 1.0f));
+    bb.max = glm::vec3(M_o * glm::vec4(bb.max, 1.0f));
+}
+
+void Model::updateBoundingBox(glm::mat4 M)
+{   
+    glm::mat4 M_tot = T_w * R_w * S_w * M_o;
+    
+    bb.min = glm::vec3(INFINITY);
+    bb.max = glm::vec3(-INFINITY);
+
+    for (auto &mesh : meshes)
+    {
+        mesh.measure(M_tot);
+        bb.min = (glm::min)(mesh.bb.min, bb.min);
+        bb.max = (glm::max)(mesh.bb.max, bb.max);
+    }
 }

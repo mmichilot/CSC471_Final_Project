@@ -1,4 +1,5 @@
 #include <iostream>
+#include <glm/gtx/string_cast.hpp>
 
 #include "Application.h"
 #include "GLSL.h"
@@ -94,8 +95,17 @@ void Application::initGeometry(const string objectDirectory)
     drum_set = make_shared<Model>((objectDirectory + "/drum_set/drum_set.obj"));
     drum_set->normalize();
 
+    // amp = make_shared<Model>(objectDirectory + "/amp/GuitarAmp.x");
+    // amp->normalize();
+
     // Setup user-created objects
     initPlane(&planeVAO, &planeVBO);
+
+    // Setup initial transforms
+    drum_set->translate(glm::vec3(0.0f, -0.4f, -2.0f));
+    glm::mat4 rotation = glm::rotate(glm::mat4(1.0f), glm::radians(220.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+    drum_set->rotate(rotation);
+    drum_set->updateBoundingBox();
 }
 
 void Application::initTextures(const string textureDirectory)
@@ -159,11 +169,11 @@ void Application::initLights()
         glm::vec3(4.0f, 0.0f, -6.0f), glm::vec3(-0.7f, 0.0f, 1.0f));
     stageLights.push_back(light1);
 
-    unsigned int light2 = lightingSystem.spawnSpotLight(glm::vec3(0.0f, 0.0f, 1.0f), 20, 25, 
-        glm::vec3(0.0f, 0.0f, -6.0f), glm::vec3(0.0f, 0.0f, 1.0f));
-    stageLights.push_back(light2);
+    // unsigned int light2 = lightingSystem.spawnSpotLight(glm::vec3(0.0f, 0.0f, 1.0f), 20, 25, 
+    //     glm::vec3(0.0f, 0.0f, -6.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+    // stageLights.push_back(light2);
 
-    // unsigned int light3 = lightingSystem.spawnSpotLight(glm::vec3(1.0f), 20, 25, 
+    // unsigned int light3 = lightingSystem.spawnSpotLight(glm::vec3(0.5f), 20, 25, 
     //     glm::vec3(0.0f, 5.0f, -6.0f), glm::vec3(0.0f, -1.0f, 1.0f));
     // stageLights.push_back(light3);
 }
@@ -190,4 +200,37 @@ void Application::initShadows()
         glFramebufferTextureLayer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, shadowMaps, 0, i);
     }
 
+}
+
+void Application::initAudio(const string audioDirectory)
+{   
+    unsigned int buffer, source;
+    
+    // Setup snare
+    buffer = audioSystem.loadFile(audioDirectory + "/snare.wav");
+    source = audioSystem.createSource(0.0f, 0.0f, 0.0f);
+    audioSystem.bind(source, buffer);
+    snare.source_id = source;
+
+    // Setup hi-hat
+    buffer = audioSystem.loadFile(audioDirectory + "/hi_hat.wav");
+    source = audioSystem.createSource(0.0f, 0.0f, 0.0f);
+    audioSystem.bind(source, buffer);
+    hi_hat.source_id = source;
+
+    // Setup kick
+    buffer = audioSystem.loadFile(audioDirectory + "/kick.wav");
+    source = audioSystem.createSource(0.0f, 0.0f, 0.0f);
+    audioSystem.bind(source, buffer);
+    kick.source_id = source;
+}
+
+void Application::initCameras()
+{
+    camera.Position = glm::vec3(0.0f, playerHeight, 0.0f);
+    drumCam.Position = glm::vec3(0.0f, 0.4f, -1.5f);
+    
+    stageCam.Position = glm::vec3(0.0f, stageHeight/2.0f, stageCenter.z - stageDepth/2.0f);
+    stageCam.Front    = glm::vec3(0.0f, 0.0f, 1.0f);
+    stageCam.Yaw      = 90.0f;
 }

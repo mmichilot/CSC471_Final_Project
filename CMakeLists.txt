@@ -18,7 +18,8 @@ file(GLOB_RECURSE GLSL "resources/*.glsl")
 
 include_directories("ext")
 include_directories("ext/glad/include")
-include_directories("includes")
+include_directories("ext/AudioFile/include")
+include_directories("include")
 
 # Set the executable.
 add_executable(${CMAKE_PROJECT_NAME} ${SOURCES} ${HEADERS} ${GLSL})
@@ -27,6 +28,14 @@ add_executable(${CMAKE_PROJECT_NAME} ${SOURCES} ${HEADERS} ${GLSL})
 findGLFW3(${CMAKE_PROJECT_NAME})
 findGLM(${CMAKE_PROJECT_NAME})
 findAssimp(${CMAKE_PROJECT_NAME})
+
+# Link OpenAL
+find_package(OpenAL CONFIG REQUIRED)
+if (OpenAL_FOUND)
+  target_link_libraries(${CMAKE_PROJECT_NAME} OpenAL::OpenAL)
+else()
+  message(FATAL_ERROR "OpenAL could not be found")
+endif()
 
 # OS specific options and libraries
 if(NOT WIN32)

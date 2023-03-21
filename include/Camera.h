@@ -6,6 +6,9 @@
 #include <glm/gtc/matrix_transform.hpp>
 
 #include <vector>
+#include <iostream>
+
+using namespace std;
 
 enum Camera_Movement {
     FORWARD,
@@ -37,6 +40,7 @@ class Camera
         Camera(glm::vec3 position = glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3 up = glm::vec3(0.0f, 1.0f, 0.0f), float yaw = YAW, float pitch = PITCH)
         : Front(glm::vec3(0.0f, 0.0f, -1.0f)), MovementSpeed(SPEED), MouseSensitivity(SENSITIVITY)
         {
+            cout << "Creating new camera" << endl;
             Position = position;
             WorldUp = up;
             Yaw = yaw;

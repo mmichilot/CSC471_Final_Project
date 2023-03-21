@@ -11,10 +11,20 @@ void Application::keyCallback(GLFWwindow *window, int key, int scancode, int act
     if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
         glfwSetWindowShouldClose(window, GL_TRUE);
 
-    if (key == GLFW_KEY_W) pressedW = updateKeyState(action);
-    if (key == GLFW_KEY_S) pressedS = updateKeyState(action);
-    if (key == GLFW_KEY_A) pressedA = updateKeyState(action);
-    if (key == GLFW_KEY_D) pressedD = updateKeyState(action);
+    // Camera
+    if (key == GLFW_KEY_W)    pressedUp    = updateKeyState(action);
+    if (key == GLFW_KEY_S)  pressedDown  = updateKeyState(action);
+    if (key == GLFW_KEY_A)  pressedLeft  = updateKeyState(action);
+    if (key == GLFW_KEY_D) pressedRight = updateKeyState(action);
+    
+    // Drum Interaction
+    if (key == GLFW_KEY_E && action == GLFW_PRESS)
+        checkDrumInteraction();
+
+    if (key == GLFW_KEY_Q && action == GLFW_PRESS && useDrums) {
+        fixedCam = !fixedCam;
+    }
+    
 }
 
 void Application::mouseCallback(GLFWwindow *window, double xpos, double ypos)
@@ -25,7 +35,7 @@ void Application::mouseCallback(GLFWwindow *window, double xpos, double ypos)
     lastX = (float) xpos;
     lastY = (float) ypos; 
     
-    camera.look(xoffset, yoffset);
+    currCam->look(xoffset, yoffset);
 }
 
 void Application::resizeCallback(GLFWwindow *window, int width, int height)

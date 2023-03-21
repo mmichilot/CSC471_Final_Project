@@ -13,10 +13,9 @@ using namespace std;
 unsigned int TextureFromFile(const char *path, const string &directory)
 {
     string filename = string(path);
-    cout << "Filename: " << filename << endl;
     filesystem::path p(filename);
     filename = directory + '/' + p.filename().u8string();
-    cout << "Path: " << filename << endl;
+    cout << "\nLoading Texture:  " << filename << endl;
 
     unsigned int textureID;
     glGenTextures(1, &textureID);
@@ -59,4 +58,10 @@ void saveImage(const char *path, int width, int height, unsigned int shadowMaps)
     std::vector<float> buffer(width*height*10);
     glGetTexImage(GL_TEXTURE_2D_ARRAY, 0, GL_DEPTH_COMPONENT, GL_FLOAT, (void*) buffer.data());
     stbi_write_png(path, width, height, 2, buffer.data(), 10*width*sizeof(float));
+}
+
+
+float random()
+{
+    return static_cast<float>(rand())/static_cast<float>(RAND_MAX);
 }

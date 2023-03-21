@@ -12,7 +12,7 @@ void Light::activate(unsigned int i, const shared_ptr<Program> prog) const
     string light = ("light[" + to_string(i) + "]");
 
     // Compute light colors
-    glm::vec3 ambient = color * glm::vec3(0.5f);
+    glm::vec3 ambient = color * glm::vec3(0.1f);
     glm::vec3 diffuse = color * glm::vec3(1.0f);
     glUniform3fv(prog->getUniform(light + ".ambient"), 1, value_ptr(ambient));
     glUniform3fv(prog->getUniform(light + ".diffuse"), 1, value_ptr(diffuse));

@@ -47,6 +47,7 @@ class Mesh {
         Mesh(vector<Vertex> vertices, vector<unsigned int> indices, vector<Texture> textures, Material material);
         void Draw(const shared_ptr<Program> prog, bool drawMaterials=true) const;
         void measure();
+        void measure(glm::mat4 M);
 
     private:
         // Render data

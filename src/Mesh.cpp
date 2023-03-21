@@ -106,3 +106,16 @@ void Mesh::measure()
         bb.max = (glm::max)(vertex.Position, bb.max);
     }
 }
+
+void Mesh::measure(glm::mat4 M)
+{
+    bb.min = glm::vec3(INFINITY);
+    bb.max = glm::vec3(-INFINITY);
+
+    for (auto &vertex : vertices)
+    {
+        glm::vec3 newVertexPos = glm::vec3(M * glm::vec4(vertex.Position, 1.0f));
+        bb.min = (glm::min)(newVertexPos, bb.min);
+        bb.max = (glm::max)(newVertexPos, bb.max);
+    }
+}
