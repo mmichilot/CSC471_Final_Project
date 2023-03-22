@@ -69,6 +69,7 @@ void Application::drumLogic()
 
     /* Hi-Hat */
     if (hi_hat.playLeft && hi_hat.leftFrameCount >= MIN_FRAME_COUNT) {
+        lightingSystem.setColor(stageLights[0], glm::vec3(random(), random(), random()));
         audioSystem.play(hi_hat.source_id);
         hi_hat.leftFrameCount = 0;
     }
@@ -76,6 +77,7 @@ void Application::drumLogic()
         hi_hat.leftFrameCount++;
 
     if (hi_hat.playRight && hi_hat.rightFrameCount >= MIN_FRAME_COUNT) {
+        lightingSystem.setColor(stageLights[1], glm::vec3(random(), random(), random()));
         audioSystem.play(hi_hat.source_id);
         hi_hat.rightFrameCount = 0;
     }
