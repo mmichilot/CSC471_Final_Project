@@ -8,6 +8,19 @@ Before compiling the demo, the following libraries must be installed:
 - Assimp (Model Loading)
 - OpenAL (Audio)
 
+## Controls
+- Player Controls
+  - WASD - Movement
+  - Mouse -Look
+  - E - Interact
+
+- Drum Controls:
+  - E - Exit Drums
+  - Q - Switch to overhead camera
+  - J / F - Snare Left / Right
+  - K / D - Hi-Hat Left / Right
+  - Space - Kick Drum
+
 ## References/Resources
 
 ### Additional Libraries Included
