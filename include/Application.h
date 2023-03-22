@@ -15,8 +15,8 @@
 
 using namespace std;
 
-#define WIDTH  800
-#define HEIGHT 600
+#define WIDTH  1280
+#define HEIGHT 720
 #define SHADOW_WIDTH  4096
 #define SHADOW_HEIGHT 4096
 
