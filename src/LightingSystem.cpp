@@ -141,6 +141,15 @@ glm::mat4 LightingSystem::getSpaceMatrix(unsigned int id, float aspect)
     return glm::mat4(0.0f);
 }
 
+glm::vec3 LightingSystem::getColor(unsigned int id)
+{
+    auto light = search(id);
+
+    if (light == NULL) return glm::vec3(0.0f);
+
+    return light->getColor();
+}
+
 /*
  * Rendering
  */

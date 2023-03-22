@@ -36,6 +36,7 @@ void Application::renderScene(shared_ptr<Program> prog, bool useMaterials) {
     
     Model.pushMatrix();
         Model.translate(glm::vec3(0.0f, stageHeight-0.8f, -stageDepth/2.0f));
+        Model.rotate(glm::radians(45.0f), glm::vec3(1.0f, 0.0f, 0.0f));
         Model.multMatrix(spotlight->getTransformMat());
         glUniformMatrix4fv(prog->getUniform("M"), 1, GL_FALSE, value_ptr(Model.topMatrix()));
         spotlight->Draw(prog, useMaterials);
@@ -43,6 +44,8 @@ void Application::renderScene(shared_ptr<Program> prog, bool useMaterials) {
 
     Model.pushMatrix();
         Model.translate(glm::vec3(-stageWidth/2.0f+1.0f, stageHeight-0.8f, -stageDepth/2.0f));
+        Model.rotate(glm::radians(60.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+        Model.rotate(glm::radians(30.0f), glm::vec3(0.0f, 1.0f, 0.0f));
         Model.multMatrix(spotlight->getTransformMat());
         glUniformMatrix4fv(prog->getUniform("M"), 1, GL_FALSE, value_ptr(Model.topMatrix()));
         spotlight->Draw(prog, useMaterials);
@@ -50,6 +53,8 @@ void Application::renderScene(shared_ptr<Program> prog, bool useMaterials) {
 
     Model.pushMatrix();
         Model.translate(glm::vec3(stageWidth/2.0f-1.0f, stageHeight-0.8f, -stageDepth/2.0f));
+        Model.rotate(glm::radians(60.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+        Model.rotate(glm::radians(-30.0f), glm::vec3(0.0f, 1.0f, 0.0f));
         Model.multMatrix(spotlight->getTransformMat());
         glUniformMatrix4fv(prog->getUniform("M"), 1, GL_FALSE, value_ptr(Model.topMatrix()));
         spotlight->Draw(prog, useMaterials);
@@ -147,6 +152,8 @@ void Application::render()
     prog->bind();
         glUniformMatrix4fv(prog->getUniform("P"), 1, GL_FALSE, value_ptr(Projection));
         glUniformMatrix4fv(prog->getUniform("V"), 1, GL_FALSE, value_ptr(View));
+        glUniform3f(prog->getUniform("material.emissive"), 0.0f, 0.0f, 0.0f);
+        glUniform1i(prog->getUniform("lightsEnabled"), 1);
         
         for (unsigned int i = 0; i < stageLights.size(); i++) {
             string index = "[" + to_string(i) + "]";
@@ -155,8 +162,10 @@ void Application::render()
         }
         
 
-        lightingSystem.setDirection(stageLights[2], glm::vec3(0.5f*cos(glfwGetTime()), -0.7f, 0.5f*sin(glfwGetTime())+0.5f));
-        lightingSystem.setColor(stageLights[2], glm::vec3(cos(0.5f*glfwGetTime())+0.5f, sin(0.5f*glfwGetTime())+0.5f, 1.0f));
+        if (playGuitar) {
+            lightingSystem.setDirection(stageLights[2], glm::vec3(0.5f*cos(glfwGetTime()), -0.7f, 0.5f*sin(glfwGetTime())+0.5f));
+            lightingSystem.setColor(stageLights[2], glm::vec3(cos(0.5f*glfwGetTime())+0.5f, sin(0.5f*glfwGetTime())+0.5f, 1.0f));
+        }
         lightingSystem.renderLights(prog, View);
         
         // Bind shadow maps
@@ -166,6 +175,37 @@ void Application::render()
         
         renderScene(prog);
         renderObjects(prog);
+
+        // Setup spotlights' "lights"
+        glUniform1i(prog->getUniform("lightsEnabled"), 0);
+        MatrixStack Model;
+        Model.pushMatrix();
+            Model.translate(glm::vec3(0.0f, stageHeight-1.0f, -stageDepth+0.4f));
+            Model.scale(0.14f);
+            Model.multMatrix(skysphere->getTransformMat());
+            glUniformMatrix4fv(prog->getUniform("M"), 1, GL_FALSE, value_ptr(Model.topMatrix()));
+            glUniform3fv(prog->getUniform("material.emissive"), 1, value_ptr(lightingSystem.getColor(stageLights[2])));
+            skysphere->Draw(prog);
+        Model.popMatrix();
+
+        Model.pushMatrix();
+            Model.translate(glm::vec3(-stageWidth/2.0f+1.05f, stageHeight-1.0f, -stageDepth+0.4f));
+            Model.scale(0.14f);
+            Model.multMatrix(skysphere->getTransformMat());
+            glUniformMatrix4fv(prog->getUniform("M"), 1, GL_FALSE, value_ptr(Model.topMatrix()));
+            glUniform3fv(prog->getUniform("material.emissive"), 1, value_ptr(lightingSystem.getColor(stageLights[0])));
+            skysphere->Draw(prog);
+        Model.popMatrix();
+
+        Model.pushMatrix();
+            Model.translate(glm::vec3(stageWidth/2.0f-1.05f, stageHeight-1.0f, -stageDepth+0.4f));
+            Model.scale(0.14f);
+            Model.multMatrix(skysphere->getTransformMat());
+            glUniformMatrix4fv(prog->getUniform("M"), 1, GL_FALSE, value_ptr(Model.topMatrix()));
+            glUniform3fv(prog->getUniform("material.emissive"), 1, value_ptr(lightingSystem.getColor(stageLights[1])));
+            skysphere->Draw(prog);
+        Model.popMatrix();
+    
     prog->unbind();
 
     sceneLogic();

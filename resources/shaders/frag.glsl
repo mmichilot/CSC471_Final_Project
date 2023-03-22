@@ -9,6 +9,7 @@
 struct Material {
 	vec3 diffuse;
 	vec3 specular;
+	vec3 emissive;
 	float shininess;
 
 	bool texture_diffuse_enable;
@@ -44,6 +45,8 @@ out vec4 color;
 uniform Material material;
 uniform Light light[MAX_LIGHTS];
 uniform sampler2DArrayShadow shadowMaps;
+uniform bool lightsEnabled;
+
 
 void computeLight(Light light, out vec3 ambient, out vec3 diffuse, out vec3 specular);
 void computeAttenuation(Light light, inout vec3 ambient, inout vec3 diffuse, inout vec3 specular);
@@ -53,25 +56,30 @@ float shadowCalculation(vec4 ls_fragPos, int shadowMap);
 void main()
 {
 	vec3 result = vec3(0.0f);
-	for (int i = 0; i < MAX_LIGHTS; i++) {
-		if (light[i].valid) {
-			// Compute lighting
-			vec3 ambient, diffuse, specular;
-			computeLight(light[i], ambient, diffuse, specular);
-			
-			// Compute attenuation away from a point light or spot light
-			if (light[i].type == POINT_LIGHT || light[i].type == SPOT_LIGHT)
-				computeAttenuation(light[i], ambient, diffuse, specular);
+	if (lightsEnabled) {
+		for (int i = 0; i < MAX_LIGHTS; i++) {
+			if (light[i].valid && lightsEnabled) {
+				// Compute lighting
+				vec3 ambient, diffuse, specular;
+				computeLight(light[i], ambient, diffuse, specular);
+				
+				// Compute attenuation away from a point light or spot light
+				if (light[i].type == POINT_LIGHT || light[i].type == SPOT_LIGHT)
+					computeAttenuation(light[i], ambient, diffuse, specular);
 
-			// Compute intensity at edges of spotlight
-			if (light[i].type == SPOT_LIGHT)
-				computeIntensity(light[i], diffuse, specular);
-			
-			// Compute shadows from light source
-			float shadow = shadowCalculation(fragPosLightSpace[i], i);
+				// Compute intensity at edges of spotlight
+				if (light[i].type == SPOT_LIGHT)
+					computeIntensity(light[i], diffuse, specular);
+				
+				// Compute shadows from light source
+				float shadow = shadowCalculation(fragPosLightSpace[i], i);
 
-			result += (ambient + (1.0 - shadow) * (diffuse + specular));
+				result += (ambient + (1.0 - shadow) * (diffuse + specular));
+			}
 		}
+	}
+	else {
+		result = material.emissive;
 	}
 	color = vec4(result, 1.0);
 }

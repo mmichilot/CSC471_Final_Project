@@ -42,6 +42,7 @@ class LightingSystem
     
         glm::vec3 getPosition(unsigned int id);
         glm::vec3 getDirection(unsigned int id);
+        glm::vec3 getColor(unsigned int id);
         glm::mat4 getSpaceMatrix(unsigned int id, float aspect);
         
     private:

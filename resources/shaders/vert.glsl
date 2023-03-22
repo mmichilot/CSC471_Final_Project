@@ -19,7 +19,7 @@ uniform mat4 lightSpaceMatrix[MAX_LIGHTS];
 
 void main()
 {	
-	// Fragment position & normal in world space
+	// Fragment position & normal in world space	
 	vec3 m_fragPos = vec3(M * vec4(vertPos, 1.0));
 	vec3 m_fragNor = vec3(M * vec4(vertNor, 0.0));
 

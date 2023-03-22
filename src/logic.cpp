@@ -1,7 +1,7 @@
 #include "Application.h"
 #include <glm/gtx/string_cast.hpp>
 
-#define MIN_FRAME_COUNT 4
+#define MIN_FRAME_COUNT 8
 
 void Application::checkDrumInteraction()
 {
@@ -114,8 +114,10 @@ bool Application::checkPlayerCollisions()
     if (playerBB.max.x >= stageWidth/2.0f || playerBB.min.x <= -stageWidth/2.0f)
         return true;
 
-    if (playerBB.max.z >= (stageCenter.z + stageDepth/2))
+    if (playerBB.max.z >= (stageCenter.z + stageDepth/2) || 
+        playerBB.min.z <= (stageCenter.z - stageDepth/2))
         return true;
+
 
     // Check if player is colliding w/ amplifier 1
     bool ampCollisionX = amplifier1->bb.max.x >= playerBB.min.x &&

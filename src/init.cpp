@@ -36,8 +36,8 @@ void Application::initShaders(const string shaderDirectory)
     prog->addUniform("V");
     prog->addUniform("M");
     prog->addUniform("shadowMaps");
+    prog->addUniform("lightsEnabled");
 
-    
     for (unsigned int i = 0; i < 10; i++) {
         string index = ("[" + to_string(i) + "]");
         prog->addUniform("light" + index + ".valid");
@@ -57,6 +57,7 @@ void Application::initShaders(const string shaderDirectory)
 
     prog->addUniform("material.diffuse");
     prog->addUniform("material.specular");
+    prog->addUniform("material.emissive");
     prog->addUniform("material.texture_diffuse_enable");
     prog->addUniform("material.texture_diffuse1");
     prog->addUniform("material.texture_specular_enable");
@@ -92,6 +93,10 @@ void Application::initGeometry(const string objectDirectory)
     // Import models
     skysphere = make_shared<Model>(objectDirectory + "/skysphere.obj");
     skysphere->normalize();
+
+    sphere = make_shared<Model>(objectDirectory + "/sphere.obj");
+    sphere->normalize();
+    // sphere->flipNormals();
     
     drum_set = make_shared<Model>(objectDirectory + "/drum_set/drum_set.obj");
     drum_set->normalize();
@@ -122,6 +127,8 @@ void Application::initGeometry(const string objectDirectory)
 
 
     // Setup initial transforms
+    sphere->scale(0.5f);
+
     drum_set->translate(glm::vec3(0.0f, -0.4f, -2.0f));
     glm::mat4 rotation = glm::rotate(glm::mat4(1.0f), glm::radians(220.0f), glm::vec3(0.0f, 1.0f, 0.0f));
     drum_set->rotate(rotation);
@@ -142,8 +149,6 @@ void Application::initGeometry(const string objectDirectory)
     amplifier2->rotate(rotation);
     amplifier2->updateBoundingBox();
 
-    // rotation = glm::rotate(glm::mat4(1.0f), glm::radians(-30.0f), glm::vec3(0.0f, 1.0f, 0.0f));
-    // piano->rotate(rotation);
     piano->scale(0.8f);
     piano->translate(glm::vec3(2.5f, -0.43f, -4.0f));
     piano->updateBoundingBox();
