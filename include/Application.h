@@ -9,12 +9,14 @@
 #include "LightingSystem.h"
 #include "Camera.h"
 #include "AudioSystem.h"
+#include "Stage.h"
+#include "Dummy.h"
 #include "common.h"
 
 using namespace std;
 
-#define WIDTH  1280
-#define HEIGHT 720
+#define WIDTH  800
+#define HEIGHT 600
 #define SHADOW_WIDTH  4096
 #define SHADOW_HEIGHT 4096
 
@@ -38,17 +40,23 @@ public:
 	shared_ptr<Program> skyProg;
 	shared_ptr<Program> shadowProg;
 
-	// Models
-	 unsigned int planeVAO, planeVBO;
-
-	// Imported Models
-	shared_ptr<Model> drum_set;
+	// Set pieces
 	shared_ptr<Model> skysphere;
-	shared_ptr<Model> amp;
+	shared_ptr<Model> drum_set;
+	shared_ptr<Model> spotlight;
+	shared_ptr<Model> amplifier1;
+	shared_ptr<Model> amplifier2;
+	shared_ptr<Model> mic_stand;
+	shared_ptr<Model> piano;
+
+	// Dummies
+	Dummy dummies;
+	bool playGuitar = false;
+	float guitaristRadius = 1.0f;
+	unsigned int guitar_riff;
 
 	// Textures
 	unsigned int skysphere_texture;
-	unsigned int stage_texture;
 
 	// Lights
 	LightingSystem lightingSystem;
@@ -67,12 +75,13 @@ public:
 	DrumPiece kick;
 
 	// Stage
-	glm::vec3 stageCenter = glm::vec3(0.0f, 0.0f, -4.0f);
-	float stageWidth = 15.0f;
-	float stageDepth = 10.0f;
-	float stageHeight = 5.0f;
+	const glm::vec3 stageCenter = glm::vec3(0.0f, 0.0f, -3.0f);
+	const float stageWidth = 10.0f;
+	const float stageDepth = 7.0f;
+	const float stageHeight = 5.0f;
+	Stage stage = Stage(stageCenter, stageWidth, stageDepth, stageHeight);
 
-	// Camera
+	// Cameras
 	Camera camera;
 	Camera drumCam;
 	Camera stageCam;
@@ -98,6 +107,7 @@ public:
 	// Frame Timing
 	float deltaTime = 0.0f;
 	float lastFrame = 0.0f;
+	float timePassed = 0.0f;
 
 	// Key States
 	bool pressedUp    = false;
@@ -127,14 +137,14 @@ private:
 	/* Rendering */
     void renderSkysphere(shared_ptr<Program> prog);
 	void renderScene(shared_ptr<Program> prog, bool useMaterials = true);
-	void renderStage(shared_ptr<Program> prog, bool useMaterials = true);
-	void renderPlane(shared_ptr<Program> prog, bool useMaterials = true, int texture = -1);
+	void renderObjects(shared_ptr<Program> prog, bool useMaterials = true);
 	void renderShadowMaps(float aspect);
 	
 	/* Logic */
 	void sceneLogic();
 	void drumLogic();
 	void checkDrumInteraction();
+	void checkGuitaristInteraction();
 	bool checkPlayerCollisions();
 };
 

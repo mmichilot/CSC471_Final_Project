@@ -20,6 +20,7 @@ void Model::Draw(const shared_ptr<Program> prog, bool drawMaterials) const
 
 void Model::loadModel(string path)
 {
+    cout << "\nLoading Model: " << path << endl;
     Assimp::Importer import;
     const aiScene *scene = import.ReadFile(path, aiProcess_Triangulate | aiProcess_GenNormals | aiProcess_FlipUVs);
 
@@ -96,7 +97,7 @@ Mesh Model::processMesh(aiMesh *mesh, const aiScene *scene)
 
     if (mesh->mMaterialIndex >= 0)
     {
-        cout << "\nLoading Materials..." << endl; 
+        cout << "Loading Materials..." << endl; 
         aiMaterial *material = scene->mMaterials[mesh->mMaterialIndex];
         
         // Load diffuse texture map, if available

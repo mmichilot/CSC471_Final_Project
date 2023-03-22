@@ -1,0 +1,17 @@
+newmtl None
+Ns 0
+Ka 0.1 0.1 0.1
+Kd 0.8 0.8 0.8
+Ks 0 0 0
+d 1
+illum 200
+map_Kd guitar0.png
+
+newmtl None_guitar1.png
+Ns 0
+Ka 0.1 0.1 0.1
+Kd 0.8 0.8 0.8
+Ks 0 0 0
+d 1
+illum 2
+map_Kd guitar1.png

@@ -18,8 +18,10 @@ void Application::keyCallback(GLFWwindow *window, int key, int scancode, int act
     if (key == GLFW_KEY_D) pressedRight = updateKeyState(action);
     
     // Drum Interaction
-    if (key == GLFW_KEY_E && action == GLFW_PRESS)
+    if (key == GLFW_KEY_E && action == GLFW_PRESS) {
         checkDrumInteraction();
+        checkGuitaristInteraction();
+    }
 
     if (key == GLFW_KEY_Q && action == GLFW_PRESS && useDrums) {
         fixedCam = !fixedCam;

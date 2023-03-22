@@ -28,110 +28,55 @@ void Application::renderSkysphere(shared_ptr<Program> prog)
     glEnable(GL_DEPTH_TEST);
 }
 
-void Application::renderPlane(shared_ptr<Program> prog, bool useMaterials, int texture)
-{
-    // By default, disable texture use
-    if (useMaterials) {
-        glUniform1i(prog->getUniform("material.texture_diffuse_enable"), GL_FALSE);
-        glUniform1i(prog->getUniform("material.texture_specular_enable"), GL_FALSE);
-
-        // Enable diffuse texturing, if available
-        if (texture != -1)
-        {
-            glUniform1i(prog->getUniform("material.texture_diffuse_enable"), GL_TRUE);
-            glActiveTexture(GL_TEXTURE0);
-            glUniform1i(prog->getUniform("material.texture_diffuse1"), 0);
-            glBindTexture(GL_TEXTURE_2D, texture);
-        }
-        else
-            glUniform3f(prog->getUniform("material.diffuse"), 0.5f, 0.5f, 0.5f);
-
-        
-        // Set specular properties
-        glUniform3f(prog->getUniform("material.specular"), 0.1f, 0.1f, 0.1f);
-        glUniform1f(prog->getUniform("material.shininess"), 32.0f);
-    }
-
-    // Render
-    glBindVertexArray(planeVAO);
-    glDrawArrays(GL_TRIANGLES, 0, 36);
-}
-
-void Application::renderStage(shared_ptr<Program> prog, bool useMaterials)
-{
-    auto Model = make_shared<MatrixStack>();
-    
-    // Stage transformations
-    Model->translate(stageCenter);
-    
-    // Ground
-    Model->pushMatrix();
-        Model->translate(glm::vec3(0.0f, -1.0f, 0.0f));
-        Model->scale(glm::vec3(stageWidth/10.0f, 1.0f, stageDepth/10.0f));
-        glUniformMatrix4fv(prog->getUniform("M"), 1, GL_FALSE, value_ptr(Model->topMatrix()));
-        renderPlane(prog, useMaterials, stage_texture);
-    Model->popMatrix();
-
-    // Ceiling
-    // Model->pushMatrix();
-    //     Model->translate(glm::vec3(0.0f, stageHeight, 0.0f));
-    //     Model->rotate(glm::radians(180.0f), glm::vec3(0.0f, 0.0f, 1.0f));
-    //     Model->scale(glm::vec3(stageWidth/10.0f, 1.0f, stageDepth/10.0f));
-    //     glUniformMatrix4fv(prog->getUniform("M"), 1, GL_FALSE, value_ptr(Model->topMatrix()));
-    //     renderPlane(prog, useMaterials);
-    // Model->popMatrix();
-
-    // Left Wall
-    Model->pushMatrix();
-        Model->translate(glm::vec3(-stageWidth/2.0f, 0.0f, 0.0f));
-        Model->rotate(glm::radians(-90.0f), glm::vec3(0.0f, 0.0f, 1.0f));
-        Model->scale(glm::vec3(1.0f, 1.0f, stageDepth/10.0f));
-        glUniformMatrix4fv(prog->getUniform("M"), 1, GL_FALSE, value_ptr(Model->topMatrix()));
-        renderPlane(prog, useMaterials);
-    Model->popMatrix();
-
-    // Right Wall
-    Model->pushMatrix();
-        Model->translate(glm::vec3(stageWidth/2.0f, 0.0f, 0.0f));
-        Model->rotate(glm::radians(90.0f), glm::vec3(0.0f, 0.0f, 1.0f));
-        Model->scale(glm::vec3(1.0f, 1.0f, stageDepth/10.0f));
-        glUniformMatrix4fv(prog->getUniform("M"), 1, GL_FALSE, value_ptr(Model->topMatrix()));
-        renderPlane(prog, useMaterials);
-    Model->popMatrix();
-
-    // Back Wall
-    Model->pushMatrix();
-        Model->translate(glm::vec3(0.0f, 0.0f, stageDepth/2.0f));
-        Model->rotate(glm::radians(-90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
-        Model->scale(glm::vec3(stageWidth/10.0f, 1.0f, 1.0f));
-        glUniformMatrix4fv(prog->getUniform("M"), 1, GL_FALSE, value_ptr(Model->topMatrix()));
-        renderPlane(prog, useMaterials);
-    Model->popMatrix();
-
-}
-
 void Application::renderScene(shared_ptr<Program> prog, bool useMaterials) {
-    // Create the matrix stacks
-    auto Model = make_shared<MatrixStack>();
-        
-    renderStage(prog, useMaterials);
+    stage.renderStage(prog, useMaterials);
 
-    // Model->pushMatrix();
-    //     Model->loadIdentity();
-    //     Model->translate(glm::vec3(2.0f, 0.0f, -2.0f));
-    //     Model->rotate(glm::radians(180.0f), glm::vec3(0.0f, 1.0f, 0.0f));
-    //     Model->scale(0.4f);
-    //     Model->multMatrix(amp->getNormalizedMat());
-    //     glUniformMatrix4fv(prog->getUniform("M"), 1, GL_FALSE, value_ptr(Model->topMatrix()));
-    //     amp->Draw(prog, useMaterials);
-    // Model->popMatrix();
-
+    MatrixStack Model;
+    Model.translate(stageCenter);
     
-    // Render drum set
+    Model.pushMatrix();
+        Model.translate(glm::vec3(0.0f, stageHeight-0.8f, -stageDepth/2.0f));
+        Model.multMatrix(spotlight->getTransformMat());
+        glUniformMatrix4fv(prog->getUniform("M"), 1, GL_FALSE, value_ptr(Model.topMatrix()));
+        spotlight->Draw(prog, useMaterials);
+    Model.popMatrix();
+
+    Model.pushMatrix();
+        Model.translate(glm::vec3(-stageWidth/2.0f+1.0f, stageHeight-0.8f, -stageDepth/2.0f));
+        Model.multMatrix(spotlight->getTransformMat());
+        glUniformMatrix4fv(prog->getUniform("M"), 1, GL_FALSE, value_ptr(Model.topMatrix()));
+        spotlight->Draw(prog, useMaterials);
+    Model.popMatrix();
+
+    Model.pushMatrix();
+        Model.translate(glm::vec3(stageWidth/2.0f-1.0f, stageHeight-0.8f, -stageDepth/2.0f));
+        Model.multMatrix(spotlight->getTransformMat());
+        glUniformMatrix4fv(prog->getUniform("M"), 1, GL_FALSE, value_ptr(Model.topMatrix()));
+        spotlight->Draw(prog, useMaterials);
+    Model.popMatrix();
+}
+
+void Application::renderObjects(shared_ptr<Program> prog, bool useMaterials)
+{
     glUniformMatrix4fv(prog->getUniform("M"), 1, GL_FALSE, value_ptr(drum_set->getTransformMat()));
     drum_set->Draw(prog, useMaterials);
+    
+    dummies.renderDummies(prog, playGuitar, useMaterials);
+    
+    glUniformMatrix4fv(prog->getUniform("M"), 1, GL_FALSE, value_ptr(amplifier1->getTransformMat()));
+    amplifier1->Draw(prog, useMaterials);
+
+    glUniformMatrix4fv(prog->getUniform("M"), 1, GL_FALSE, value_ptr(amplifier2->getTransformMat()));
+    amplifier2->Draw(prog, useMaterials);
+
+    // glUniformMatrix4fv(prog->getUniform("M"), 1, GL_FALSE, value_ptr(mic_stand->getTransformMat()));
+    // mic_stand->Draw(prog, useMaterials);
+
+    glUniformMatrix4fv(prog->getUniform("M"), 1, GL_FALSE, value_ptr(piano->getTransformMat()));
+    piano->Draw(prog, useMaterials);
 
 }
+
 
 void Application::renderShadowMaps(float aspect)
 {
@@ -148,7 +93,7 @@ void Application::renderShadowMaps(float aspect)
         glDrawBuffer(GL_NONE);
         glReadBuffer(GL_NONE);
         
-        // Get ligt space matrix for a given light
+        // Get light space matrix for a given light
         glm::mat4 LightSpace = lightingSystem.getSpaceMatrix(stageLights[i], aspect);
         glUniformMatrix4fv(shadowProg->getUniform("lightSpaceMatrix"), 1, GL_FALSE, value_ptr(LightSpace));
 
@@ -156,7 +101,8 @@ void Application::renderShadowMaps(float aspect)
         glClear(GL_DEPTH_BUFFER_BIT);
        
         glCullFace(GL_FRONT);
-        renderScene(shadowProg, false);
+        // Only render objects
+        renderObjects(shadowProg, false);
         glCullFace(GL_BACK);
     }
 
@@ -170,6 +116,7 @@ void Application::render()
     float currentFrame = static_cast<float>(glfwGetTime());
     deltaTime = currentFrame - lastFrame;
     lastFrame = currentFrame;
+    timePassed += deltaTime;
 
     // Get current frame buffer size and spect ratio
     int width, height;
@@ -208,10 +155,8 @@ void Application::render()
         }
         
 
-        // lightingSystem.setPosition(stageLights[2], glm::vec3(3*glm::cos(glfwGetTime()), 0.0f, -6.0f));
-        // lightingSystem.setPosition(stageLights[1], glm::vec3(2*glm::cos(glfwGetTime()), 0.0f, -6.0f));
-        // lightingSystem.setDirection(stageLights[3], glm::vec3(glm::cos(glfwGetTime()), -1.0f, 1.0f));
-
+        lightingSystem.setDirection(stageLights[2], glm::vec3(0.5f*cos(glfwGetTime()), -0.7f, 0.5f*sin(glfwGetTime())+0.5f));
+        lightingSystem.setColor(stageLights[2], glm::vec3(cos(0.5f*glfwGetTime())+0.5f, sin(0.5f*glfwGetTime())+0.5f, 1.0f));
         lightingSystem.renderLights(prog, View);
         
         // Bind shadow maps
@@ -220,6 +165,7 @@ void Application::render()
         glBindTexture(GL_TEXTURE_2D_ARRAY, shadowMaps);
         
         renderScene(prog);
+        renderObjects(prog);
     prog->unbind();
 
     sceneLogic();

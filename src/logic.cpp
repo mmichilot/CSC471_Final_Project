@@ -1,6 +1,8 @@
 #include "Application.h"
 #include <glm/gtx/string_cast.hpp>
 
+#define MIN_FRAME_COUNT 4
+
 void Application::checkDrumInteraction()
 {
     glm::vec2 playerPos = glm::vec2(camera.Position.x, camera.Position.z);
@@ -20,6 +22,24 @@ void Application::checkDrumInteraction()
     }
 }
 
+void Application::checkGuitaristInteraction()
+{
+    glm::vec2 playerPos = glm::vec2(camera.Position.x, camera.Position.z);
+
+    // Determine whether player is within range to interact w/ drums
+    float CP = (float) sqrt(pow(playerPos.x - dummies.guitaristPos.x, 2) + 
+                            pow(playerPos.y - dummies.guitaristPos.z, 2));
+
+    if ((CP <= guitaristRadius) && !playGuitar) {
+        playGuitar = true;
+        alSourcePlay(guitar_riff);
+    }
+    else if ((CP <= guitaristRadius) && playGuitar) {
+        playGuitar = false;
+        alSourceStop(guitar_riff);
+    }
+}
+
 void Application::drumLogic()
 {
     // Poll all keys
@@ -31,7 +51,7 @@ void Application::drumLogic()
     kick.playRight = (glfwGetKey(windowManager->getHandle(), GLFW_KEY_SPACE) == GLFW_PRESS);
 
     /* Snare */
-    if (snare.playLeft && snare.leftFrameCount >= 18) {
+    if (snare.playLeft && snare.leftFrameCount >= MIN_FRAME_COUNT) {
         lightingSystem.setColor(stageLights[0], glm::vec3(random(), random(), random()));
         audioSystem.play(snare.source_id);
         snare.leftFrameCount = 0;
@@ -39,13 +59,43 @@ void Application::drumLogic()
     else
         snare.leftFrameCount++;
 
-    if (snare.playRight && snare.rightFrameCount >= 18) {
+    if (snare.playRight && snare.rightFrameCount >= MIN_FRAME_COUNT) {
         lightingSystem.setColor(stageLights[1], glm::vec3(random(), random(), random()));
         audioSystem.play(snare.source_id);
         snare.rightFrameCount = 0;
     }
     else
         snare.rightFrameCount++;
+
+    /* Hi-Hat */
+    if (hi_hat.playLeft && hi_hat.leftFrameCount >= MIN_FRAME_COUNT) {
+        audioSystem.play(hi_hat.source_id);
+        hi_hat.leftFrameCount = 0;
+    }
+    else
+        hi_hat.leftFrameCount++;
+
+    if (hi_hat.playRight && hi_hat.rightFrameCount >= MIN_FRAME_COUNT) {
+        audioSystem.play(hi_hat.source_id);
+        hi_hat.rightFrameCount = 0;
+    }
+    else
+        hi_hat.rightFrameCount++;
+
+    /* Kick */
+    if (kick.playLeft && kick.leftFrameCount >= MIN_FRAME_COUNT) {
+        audioSystem.play(kick.source_id);
+        kick.leftFrameCount = 0;
+    }
+    else
+        kick.leftFrameCount++;
+
+    if (kick.playRight && kick.rightFrameCount >= MIN_FRAME_COUNT) {
+        audioSystem.play(kick.source_id);
+        kick.rightFrameCount = 0;
+    }
+    else
+        kick.rightFrameCount++;
 
 }
 
@@ -65,6 +115,40 @@ bool Application::checkPlayerCollisions()
         return true;
 
     if (playerBB.max.z >= (stageCenter.z + stageDepth/2))
+        return true;
+
+    // Check if player is colliding w/ amplifier 1
+    bool ampCollisionX = amplifier1->bb.max.x >= playerBB.min.x &&
+        playerBB.max.x >= amplifier1->bb.min.x;
+    bool ampCollisionZ = amplifier1->bb.max.z >= playerBB.min.z &&
+        playerBB.max.z >= amplifier1->bb.min.z;
+
+    if (ampCollisionX && ampCollisionZ) 
+        return true;
+
+    // Check if player is colliding w/ amplifier 2
+    ampCollisionX = amplifier2->bb.max.x >= playerBB.min.x &&
+        playerBB.max.x >= amplifier2->bb.min.x;
+    ampCollisionZ = amplifier2->bb.max.z >= playerBB.min.z &&
+        playerBB.max.z >= amplifier2->bb.min.z;
+
+    if (ampCollisionX && ampCollisionZ) 
+        return true;
+
+    // Check if player is colliding w/ guitarist
+    bool guitarCollisionX = dummies.guitaristBB.max.x >= playerBB.min.x &&
+        playerBB.max.x >= dummies.guitaristBB.min.x;
+    bool guitarCollisionZ = dummies.guitaristBB.max.z >= playerBB.min.z &&
+        playerBB.max.z >= dummies.guitaristBB.min.z;
+    if (guitarCollisionX && guitarCollisionZ)
+        return true;
+
+    // Check if player is colliding w/ piano
+    bool pianoCollisionX = piano->bb.max.x >= playerBB.min.x &&
+        playerBB.max.x >= piano->bb.min.x;
+    bool pianoCollisionZ = piano->bb.max.z >= playerBB.min.z &&
+        playerBB.max.z >= piano->bb.min.z;
+    if (pianoCollisionX && pianoCollisionZ)
         return true;
 
     return false;

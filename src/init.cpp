@@ -4,6 +4,7 @@
 #include "Application.h"
 #include "GLSL.h"
 #include "common.h"
+#include "MatrixStack.h"
 
 using namespace std;
 
@@ -89,29 +90,68 @@ void Application::initShaders(const string shaderDirectory)
 void Application::initGeometry(const string objectDirectory)
 {	
     // Import models
-    skysphere = make_shared<Model>((objectDirectory + "/skysphere.obj"));
+    skysphere = make_shared<Model>(objectDirectory + "/skysphere.obj");
     skysphere->normalize();
     
-    drum_set = make_shared<Model>((objectDirectory + "/drum_set/drum_set.obj"));
+    drum_set = make_shared<Model>(objectDirectory + "/drum_set/drum_set.obj");
     drum_set->normalize();
 
-    // amp = make_shared<Model>(objectDirectory + "/amp/GuitarAmp.x");
-    // amp->normalize();
+    spotlight = make_shared<Model>(objectDirectory + "/spotlight/spotlight.fbx");
+    spotlight->normalize();
 
-    // Setup user-created objects
-    initPlane(&planeVAO, &planeVBO);
+    amplifier1 = make_shared<Model>(objectDirectory + "/amp/Amplifier.obj");
+    amplifier1->normalize();
+
+    amplifier2 = make_shared<Model>(objectDirectory + "/amp/Amplifier.obj");
+    amplifier2->normalize();
+
+    mic_stand = make_shared<Model>(objectDirectory + "/mic/mic_stand.obj");
+    mic_stand->normalize();
+
+    piano = make_shared<Model>(objectDirectory + "/piano/Piano.obj");
+    piano->normalize();
+
+    dummies.model = make_shared<Model>(objectDirectory + "/dummy/Dummy.obj");
+    dummies.model->normalize();
+
+    dummies.guitar = make_shared<Model>(objectDirectory + "/guitar/guitar.obj");
+    dummies.guitar->normalize();
+
+    stage.truss = make_shared<Model>(objectDirectory + "/truss.obj");
+    stage.truss->normalize();
+
 
     // Setup initial transforms
     drum_set->translate(glm::vec3(0.0f, -0.4f, -2.0f));
     glm::mat4 rotation = glm::rotate(glm::mat4(1.0f), glm::radians(220.0f), glm::vec3(0.0f, 1.0f, 0.0f));
     drum_set->rotate(rotation);
     drum_set->updateBoundingBox();
+
+    rotation = glm::rotate(glm::mat4(1.0f), glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+    stage.truss->rotate(rotation);
+    stage.truss->updateBoundingBox();
+
+    spotlight->scale(0.5f);
+    spotlight->updateBoundingBox();
+
+    rotation = glm::rotate(glm::mat4(1.0f), glm::radians(180.f), glm::vec3(0.0f, 1.0f, 0.0f));
+    amplifier1->translate(glm::vec3(-3.0f, 0.0f, 0.0f));
+    amplifier1->rotate(rotation);
+    amplifier1->updateBoundingBox();
+    amplifier2->translate(glm::vec3(3.0f, 0.0f, 0.0f));
+    amplifier2->rotate(rotation);
+    amplifier2->updateBoundingBox();
+
+    // rotation = glm::rotate(glm::mat4(1.0f), glm::radians(-30.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+    // piano->rotate(rotation);
+    piano->scale(0.8f);
+    piano->translate(glm::vec3(2.5f, -0.43f, -4.0f));
+    piano->updateBoundingBox();
 }
 
 void Application::initTextures(const string textureDirectory)
 {
     // Load textures
-
     string texFile = "/nightSky.png";
     skysphere_texture = TextureFromFile(texFile.c_str(), textureDirectory);
     glBindTexture(GL_TEXTURE_2D, skysphere_texture);
@@ -119,63 +159,27 @@ void Application::initTextures(const string textureDirectory)
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 
     texFile = "/stage_floor.jpg";
-    stage_texture = TextureFromFile(texFile.c_str(), textureDirectory);
-    glBindTexture(GL_TEXTURE_2D, stage_texture);
+    stage.stage_texture = TextureFromFile(texFile.c_str(), textureDirectory);
+    glBindTexture(GL_TEXTURE_2D, stage.stage_texture);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_MIRRORED_REPEAT);
-}
-
-void initPlane(unsigned int *VAO, unsigned int *VBO)
-{
-    float groundX = 5.0f;
-    float groundZ = 5.0f;
-    float groundTex = 5.0f;
-
-    float vertices[] = {
-        // positions         	      // normals       	 // texture coords
-        -groundX, 0.0f, -groundZ,  0.0f, 1.0f,  0.0f,       0.0f,  groundTex,
-         groundX, 0.0f, -groundZ,  0.0f, 1.0f,  0.0f,  groundTex,  groundTex,
-         groundX, 0.0f,  groundZ,  0.0f, 1.0f,  0.0f,  groundTex,       0.0f,
-         groundX, 0.0f,  groundZ,  0.0f, 1.0f,  0.0f,  groundTex,       0.0f,
-        -groundX, 0.0f,  groundZ,  0.0f, 1.0f,  0.0f,       0.0f,       0.0f,
-        -groundX, 0.0f, -groundZ,  0.0f, 1.0f,  0.0f,       0.0f,  groundTex,
-    };
-
-    // Generate ground VAO and VBO
-    glGenVertexArrays(1, VAO);
-    glGenBuffers(1, VBO);
-
-    // Send vertices to GPU
-    glBindBuffer(GL_ARRAY_BUFFER, *VBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
-
-    // Setup attribute pointers
-    glBindVertexArray(*VAO);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
-    glEnableVertexAttribArray(0);
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
-    glEnableVertexAttribArray(1);
-    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
-    glEnableVertexAttribArray(2);
+    
+    glBindTexture(GL_TEXTURE_2D, 0);
 }
 
 void Application::initLights()
 {
     // Setup lights
-    unsigned int light0 = lightingSystem.spawnSpotLight(glm::vec3(1.0f, 0.0f, 0.0f), 20, 25, 
-        glm::vec3(-4.0f, 0.0f, -6.0f), glm::vec3(0.7f, 0.0f, 1.0f));
+    unsigned int light0 = lightingSystem.spawnSpotLight(glm::vec3(1.0f), 15, 20, 
+        glm::vec3(stageCenter.x-stageWidth/2.0f+1.0f, stageHeight, stageCenter.z-stageDepth/2.0f), glm::vec3(0.2f, -0.7f, 0.2f));
     stageLights.push_back(light0);
 
-    unsigned int light1 = lightingSystem.spawnSpotLight(glm::vec3(0.0f, 1.0f, 0.0f), 20, 25, 
-        glm::vec3(4.0f, 0.0f, -6.0f), glm::vec3(-0.7f, 0.0f, 1.0f));
+    unsigned int light1 = lightingSystem.spawnSpotLight(glm::vec3(1.0f), 15, 20, 
+        glm::vec3(stageCenter.x+stageWidth/2.0f-1.0f, stageHeight, stageCenter.z-stageDepth/2.0f), glm::vec3(-0.2f, -0.7f, 0.2f));
     stageLights.push_back(light1);
 
-    // unsigned int light2 = lightingSystem.spawnSpotLight(glm::vec3(0.0f, 0.0f, 1.0f), 20, 25, 
-    //     glm::vec3(0.0f, 0.0f, -6.0f), glm::vec3(0.0f, 0.0f, 1.0f));
-    // stageLights.push_back(light2);
-
-    // unsigned int light3 = lightingSystem.spawnSpotLight(glm::vec3(0.5f), 20, 25, 
-    //     glm::vec3(0.0f, 5.0f, -6.0f), glm::vec3(0.0f, -1.0f, 1.0f));
-    // stageLights.push_back(light3);
+    unsigned int light2 = lightingSystem.spawnSpotLight(glm::vec3(1.0f), 20, 25, 
+        glm::vec3(0.0f, stageHeight, stageCenter.z-stageDepth/2.0f), glm::vec3(0.0f, -0.7f, 1.0f));
+    stageLights.push_back(light2);
 }
 
 void Application::initShadows()
@@ -223,6 +227,12 @@ void Application::initAudio(const string audioDirectory)
     source = audioSystem.createSource(0.0f, 0.0f, 0.0f);
     audioSystem.bind(source, buffer);
     kick.source_id = source;
+
+    buffer = audioSystem.loadFile(audioDirectory + "/guitar-riff.wav");
+    source = audioSystem.createSource(0.0f, 0.0f, 0.0f);
+    audioSystem.bind(source, buffer);
+    guitar_riff = source;
+    alSourcei(guitar_riff, AL_LOOPING, AL_TRUE);
 }
 
 void Application::initCameras()
@@ -230,7 +240,7 @@ void Application::initCameras()
     camera.Position = glm::vec3(0.0f, playerHeight, 0.0f);
     drumCam.Position = glm::vec3(0.0f, 0.4f, -1.5f);
     
-    stageCam.Position = glm::vec3(0.0f, stageHeight/2.0f, stageCenter.z - stageDepth/2.0f);
+    stageCam.Position = glm::vec3(0.0f, stageHeight/2.0f, stageCenter.z - stageDepth/2.0f - 3.0f);
     stageCam.Front    = glm::vec3(0.0f, 0.0f, 1.0f);
     stageCam.Yaw      = 90.0f;
 }

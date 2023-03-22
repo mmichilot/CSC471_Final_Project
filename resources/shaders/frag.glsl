@@ -53,7 +53,6 @@ float shadowCalculation(vec4 ls_fragPos, int shadowMap);
 void main()
 {
 	vec3 result = vec3(0.0f);
-
 	for (int i = 0; i < MAX_LIGHTS; i++) {
 		if (light[i].valid) {
 			// Compute lighting
@@ -74,7 +73,6 @@ void main()
 			result += (ambient + (1.0 - shadow) * (diffuse + specular));
 		}
 	}
-	
 	color = vec4(result, 1.0);
 }
 

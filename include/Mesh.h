@@ -48,6 +48,8 @@ class Mesh {
         void Draw(const shared_ptr<Program> prog, bool drawMaterials=true) const;
         void measure();
         void measure(glm::mat4 M);
+        glm::vec3 moveToZero();
+        unsigned int getVAO() { return VAO; }
 
     private:
         // Render data

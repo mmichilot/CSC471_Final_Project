@@ -1,9 +1,6 @@
 #include "Application.h"
 #include "common.h"
 
-#define WIDTH  1280
-#define HEIGHT 720
-
 using namespace std;
 	
 
@@ -39,14 +36,18 @@ int main(int argc, char *argv[])
 	application.initLights();
 	application.initShadows();
 	application.initCameras();
+	application.stage.initStage();
+	application.dummies.init();
+
+	GLFWwindow* window = windowManager.getHandle();
 
 	// Loop until the user closes the window.
-	while (!glfwWindowShouldClose(windowManager.getHandle()))
+	while (!glfwWindowShouldClose(window))
 	{
 		application.render();
 
 		// Swap front and back buffers.
-		glfwSwapBuffers(windowManager.getHandle());
+		glfwSwapBuffers(window);
 		// Poll for and process events.
 		glfwPollEvents();
 	}

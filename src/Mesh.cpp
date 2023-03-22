@@ -1,6 +1,7 @@
 #include <vector>
 #include <iostream>
 #include <glm/gtc/type_ptr.hpp>
+#include <glm/gtx/string_cast.hpp>
 
 #include "Mesh.h"
 
@@ -118,4 +119,12 @@ void Mesh::measure(glm::mat4 M)
         bb.min = (glm::min)(newVertexPos, bb.min);
         bb.max = (glm::max)(newVertexPos, bb.max);
     }
+}
+
+glm::vec3 Mesh::moveToZero()
+{
+    glm::vec3 extents = bb.max - bb.min;
+    glm::vec3 center = bb.min + (0.5f * extents);
+
+    return -1.0f * center;
 }
