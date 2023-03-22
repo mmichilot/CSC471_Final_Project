@@ -42,7 +42,6 @@ public:
 
 	// Set pieces
 	shared_ptr<Model> skysphere;
-	shared_ptr<Model> sphere;
 	shared_ptr<Model> drum_set;
 	shared_ptr<Model> spotlight;
 	shared_ptr<Model> amplifier1;

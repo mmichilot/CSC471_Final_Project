@@ -93,10 +93,6 @@ void Application::initGeometry(const string objectDirectory)
     // Import models
     skysphere = make_shared<Model>(objectDirectory + "/skysphere.obj");
     skysphere->normalize();
-
-    sphere = make_shared<Model>(objectDirectory + "/sphere.obj");
-    sphere->normalize();
-    // sphere->flipNormals();
     
     drum_set = make_shared<Model>(objectDirectory + "/drum_set/drum_set.obj");
     drum_set->normalize();
@@ -124,7 +120,6 @@ void Application::initGeometry(const string objectDirectory)
 
 
     // Setup initial transforms
-    sphere->scale(0.5f);
 
     drum_set->translate(glm::vec3(0.0f, -0.4f, -2.0f));
     glm::mat4 rotation = glm::rotate(glm::mat4(1.0f), glm::radians(220.0f), glm::vec3(0.0f, 1.0f, 0.0f));
