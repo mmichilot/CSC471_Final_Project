@@ -74,9 +74,6 @@ void Application::renderObjects(shared_ptr<Program> prog, bool useMaterials)
     glUniformMatrix4fv(prog->getUniform("M"), 1, GL_FALSE, value_ptr(amplifier2->getTransformMat()));
     amplifier2->Draw(prog, useMaterials);
 
-    // glUniformMatrix4fv(prog->getUniform("M"), 1, GL_FALSE, value_ptr(mic_stand->getTransformMat()));
-    // mic_stand->Draw(prog, useMaterials);
-
     glUniformMatrix4fv(prog->getUniform("M"), 1, GL_FALSE, value_ptr(piano->getTransformMat()));
     piano->Draw(prog, useMaterials);
 

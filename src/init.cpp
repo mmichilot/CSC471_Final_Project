@@ -110,9 +110,6 @@ void Application::initGeometry(const string objectDirectory)
     amplifier2 = make_shared<Model>(objectDirectory + "/amp/Amplifier.obj");
     amplifier2->normalize();
 
-    mic_stand = make_shared<Model>(objectDirectory + "/mic/mic_stand.obj");
-    mic_stand->normalize();
-
     piano = make_shared<Model>(objectDirectory + "/piano/Piano.obj");
     piano->normalize();
 

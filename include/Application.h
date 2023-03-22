@@ -47,7 +47,6 @@ public:
 	shared_ptr<Model> spotlight;
 	shared_ptr<Model> amplifier1;
 	shared_ptr<Model> amplifier2;
-	shared_ptr<Model> mic_stand;
 	shared_ptr<Model> piano;
 
 	// Dummies
